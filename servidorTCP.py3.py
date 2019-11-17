@@ -16,8 +16,12 @@ def fluxoCliente(sock, addr):
   myUser=newUser(sock, addr)
   newUserEntrou='%s entrou...' % myUser.getNick()
   print(newUserEntrou)
-  sendMessage(connectionSocket,  newUserEntrou)
+  sendMessage(connectionSocket,  "Bem vindo ao chat. Divirta-se\n")
   
+  for i in range(0,len(listaUsers)):
+    if myUser.getPorta()!=listaUsers[i].getPorta():
+      sendMessage(listaUsers[i].getSocket(), myUser.getNick() + " entrou...")
+
   switchMessages(connectionSocket, myUser)
 
 def nickChoice(connectionSocket):
@@ -35,18 +39,21 @@ def switchMessages(connectionSocket, myUser):
   while(1):
     message=connectionSocket.recv(1024).decode('utf-8')
     print(myUser.getNick() + ":" + message)
-    if message=='lista()':
+    if message== 'lista()':
       sendLista(connectionSocket)
+    elif message == 'sair()':
+      sendMessage(connectionSocket, message)
+      #th.Thread._stop
+      th.Thread._delete
+      #connectionSocket.close()
     else:  
       for i in range(0,len(listaUsers)):
         if myUser.getPorta()!=listaUsers[i].getPorta():
           sendMessage(listaUsers[i].getSocket(), myUser.getNick() + ":" + message)
     
-  
-
 def sendMessage(connectionSocket, message):
   connectionSocket.send(message.encode('utf-8'))
-    
+ 
 def sendLista(socketEnvio):
   lista='lista: <\n'
   for i in range(0,len(listaUsers)):

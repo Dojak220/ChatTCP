@@ -24,11 +24,14 @@ def sendMessage(clientSocket):
     while(1):
         sentence=input()
         clientSocket.send(sentence.encode('utf-8'))
+        
 
 def readMessage(clientSocket):
     while(1):    
         message = clientSocket.recv(1024).decode('utf-8')
         print(message)
+        if message == 'sair()':
+            quitUser(clientSocket)
     
 
 
