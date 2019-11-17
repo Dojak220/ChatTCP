@@ -11,32 +11,15 @@ from socket import * # sockets
 import threading as th
 from user import User
 
-
+#Funções referentes aos clientes
 def fluxoCliente(sock, addr):
   myUser=newUser(sock, addr)
   newUserEntrou='%s entrou...' % myUser.getNick()
   print(newUserEntrou)
   sendMessage(connectionSocket,  newUserEntrou)
   
-  newMessage=th.Thread(target = receiveMessages, args=(connectionSocket,myUser, ))
-  newMessage.start()
-  
-  
-  '''
-  message = 'None'
-  while message != 'quit':
-    message = connectionSocket.recv(1024).decode('utf-8')
-    print(novoUsuario.getNick+': '+message)
-    
-    if message.find('(') != -1 and message.find(')') != -1:
-      comando = message.split('(')
-      if comando[0] == 'privado':
-        privateMessage = comando[1].split(')')
-        
-      if comando[0] == 'lista':
-  '''
-    
-       
+  switchMessages(connectionSocket, myUser)
+
 def nickChoice(connectionSocket):
   sendMessage(connectionSocket, "Escolha seu nickname:")
   nickname = connectionSocket.recv(1024).decode('utf-8')
@@ -44,20 +27,47 @@ def nickChoice(connectionSocket):
 
 def newUser(connectionSocket, addr):
   nick=nickChoice(connectionSocket)
-  newUser=User(nick, addr[0], addr[1])
+  newUser=User(nick, addr[0], addr[1], connectionSocket)
+  listaUsers.append(newUser)
   return newUser
   
-def receiveMessages(connectionSocket, myUser):
+def switchMessages(connectionSocket, myUser):
   while(1):
     message=connectionSocket.recv(1024).decode('utf-8')
     print(myUser.getNick() + ":" + message)
-    sendMessage(connectionSocket, message)
+    if message=='lista()':
+      sendLista(connectionSocket)
+    else:  
+      for i in range(0,len(listaUsers)):
+        if myUser.getPorta()!=listaUsers[i].getPorta():
+          sendMessage(listaUsers[i].getSocket(), myUser.getNick() + ":" + message)
+    
   
 
 def sendMessage(connectionSocket, message):
   connectionSocket.send(message.encode('utf-8'))
     
-    
+def sendLista(socketEnvio):
+  lista='lista: <\n'
+  for i in range(0,len(listaUsers)):
+    lista=lista+str(listaUsers[i])+'\n'
+  lista=lista+'>'
+  sendMessage(socketEnvio, lista)
+
+#Funções referentes ao servidor  
+def fluxoServidor():
+  comando=input()
+  if comando=='lista()':
+    lista()
+  else:
+    print('Command not found')
+
+def lista():
+  lista='lista: <\n'
+  for i in range(0,len(listaUsers)):
+    lista=lista+str(listaUsers[i])+'\n'
+  lista=lista+'>'
+  print(lista)       
   
   
 # definicao das variaveis
@@ -67,6 +77,7 @@ serverSocket = socket(AF_INET,SOCK_STREAM) # criacao do socket TCP
 serverSocket.bind((serverName,serverPort)) # bind do ip do servidor com a porta
 serverSocket.listen(1) # socket pronto para 'ouvir' conexoes
 
+listaUsers=[]
 print ('Sala de chat iniciada na porta %d ...' % (serverPort))
 while 1:
   connectionSocket, addr = serverSocket.accept() # aceita as conexoes dos clientes
