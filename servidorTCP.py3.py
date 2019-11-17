@@ -38,14 +38,22 @@ def newUser(connectionSocket, addr):
 def switchMessages(connectionSocket, myUser):
   while(1):
     message=connectionSocket.recv(1024).decode('utf-8')
-    print(myUser.getNick() + ":" + message)
+    if message.find('\p ') == 0:
+      sMessage = message.split()
+      flag = 0
+      for i in listaUsers:
+        if listaUsers[i].getNick() == sMessage[1]:
+          sendMessage(listaUsers[i].getSocket(), myUser.getNick() + ":" + sMessage[2])
+          flag = 1
+        break
+      if flag == 0:
+        print("Usuário não está presente no chat.\n")
+    else:
+      print(myUser.getNick() + ":" + message)
     if message== 'lista()':
       sendLista(connectionSocket)
     elif message == 'sair()':
       sendMessage(connectionSocket, message)
-      #th.Thread._stop
-      th.Thread._delete
-      #connectionSocket.close()
     else:  
       for i in range(0,len(listaUsers)):
         if myUser.getPorta()!=listaUsers[i].getPorta():
